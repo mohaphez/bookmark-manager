@@ -14,7 +14,7 @@ class StoreBookmarkRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'url' => ['required', 'url', 'active_url', 'unique:bookmarks,url,'.$this->user()->id],
+            'url' => ['required', 'url', 'unique:bookmarks,url,'.$this->user()->id],
             'title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
         ];
