@@ -6,7 +6,6 @@ use App\Enums\MetadataStatus;
 use App\Models\Bookmark;
 use App\Pipes\Bookmark\FetchWebpage;
 use App\Pipes\Bookmark\ParseMetadata;
-use App\Pipes\Bookmark\SaveMetadata;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -38,8 +37,7 @@ class FetchBookmarkMetadata implements ShouldQueue
                 ->send($this->bookmark)
                 ->through([
                     FetchWebpage::class,
-                    ParseMetadata::class,
-                    SaveMetadata::class,
+                    ParseMetadata::class
                 ])
                 ->thenReturn();
 

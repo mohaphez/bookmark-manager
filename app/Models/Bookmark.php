@@ -13,27 +13,6 @@ class Bookmark extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
-    /**
-     * Temporary storage for HTML content during processing
-     *
-     * @var string|null
-     */
-    public $html_content = null;
-
-    /**
-     * Temporary storage for extracted title during processing
-     *
-     * @var string|null
-     */
-    public $extracted_title = null;
-
-    /**
-     * Temporary storage for extracted description during processing
-     *
-     * @var string|null
-     */
-    public $extracted_description = null;
-
     protected $fillable = [
         'user_id',
         'url',
@@ -59,37 +38,5 @@ class Bookmark extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Check if the bookmark has completed metadata fetching
-     */
-    public function hasCompletedMetadata(): bool
-    {
-        return $this->metadata_status === MetadataStatus::COMPLETED;
-    }
-
-    /**
-     * Check if the bookmark has failed metadata fetching
-     */
-    public function hasFailedMetadata(): bool
-    {
-        return $this->metadata_status === MetadataStatus::FAILED;
-    }
-
-    /**
-     * Check if the bookmark is pending metadata fetching
-     */
-    public function isPendingMetadata(): bool
-    {
-        return $this->metadata_status === MetadataStatus::PENDING;
-    }
-
-    /**
-     * Check if the bookmark is processing metadata fetching
-     */
-    public function isProcessingMetadata(): bool
-    {
-        return $this->metadata_status === MetadataStatus::PROCESSING;
     }
 }

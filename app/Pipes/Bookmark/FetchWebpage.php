@@ -29,17 +29,19 @@ class FetchWebpage
                     'protocols' => ['http', 'https'],
                     'track_redirects' => true,
                 ],
-            ])->get($bookmark->url);
+            ])
+                ->withUserAgent($this->randomUserAgent())
+                ->get($bookmark->url);
 
             if (! $response->successful()) {
                 throw new \Exception("Failed to fetch webpage: HTTP status {$response->status()}");
             }
 
-            $bookmark->html_content = $response->body();
-
             $bookmark->update([
                 'metadata_status' => MetadataStatus::PROCESSING->value,
             ]);
+
+            $bookmark->html_content = $response->body();
 
             return $next($bookmark);
 
@@ -52,5 +54,16 @@ class FetchWebpage
 
             throw new \Exception("Unexpected error fetching webpage: {$e->getMessage()}");
         }
+    }
+
+    private function randomUserAgent()
+    {
+        $userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        ];
+
+        return $userAgents[array_rand($userAgents)];
     }
 }

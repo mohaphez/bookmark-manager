@@ -2,6 +2,7 @@
 
 namespace App\Pipes\Bookmark;
 
+use App\Enums\MetadataStatus;
 use App\Models\Bookmark;
 use Closure;
 use DOMDocument;
@@ -29,15 +30,19 @@ class ParseMetadata
 
             $title = $this->extractTitle($dom);
             if (! empty($title) && empty($bookmark->title)) {
-                $bookmark->extracted_title = $title;
+                $bookmark->title = $title;
             }
 
             $description = $this->extractDescription($dom);
             if (! empty($description) && empty($bookmark->description)) {
-                $bookmark->extracted_description = $description;
+                $bookmark->description = $description;
             }
 
             unset($bookmark->html_content);
+
+            $bookmark->metadata_status = MetadataStatus::COMPLETED->value;
+
+            $bookmark->save();
 
             return $next($bookmark);
         } catch (\Exception $e) {
@@ -62,7 +67,6 @@ class ParseMetadata
 
         return null;
     }
-
 
     private function extractDescription(DOMDocument $dom): ?string
     {
