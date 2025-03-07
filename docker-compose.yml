@@ -23,6 +23,25 @@ services:
             - sail
         depends_on:
             - redis
+    bookmark-subscriber:
+        build:
+            context: './vendor/laravel/sail/runtimes/8.4'
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: 'sail-8.4/app'
+        restart: unless-stopped
+        command: php artisan bookmark:subscribe
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - redis
+            - laravel.test
     redis:
         image: 'redis:alpine'
         ports:

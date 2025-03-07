@@ -25,5 +25,6 @@ Route::prefix('v1')->group(function () {
         // Bookmark routes
         Route::get('/bookmarks', [BookmarkController::class, 'index']);
         Route::post('/bookmarks', [BookmarkController::class, 'store']);
+        Route::delete('/bookmarks/{id}', [BookmarkController::class, 'destroy']);
     });
 });
