@@ -40,4 +40,23 @@ class BookmarkController extends Controller
             code: 201
         );
     }
+
+    public function destroy(string $id): JsonResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $deleted = bookmarkService()->deleteBookmark($user, $id);
+
+        if (! $deleted) {
+            return $this->error(
+                message: __('Bookmark not found or you do not have permission to delete it'),
+                code: 404
+            );
+        }
+
+        return $this->success(
+            data: null,
+            message: __('Bookmark deleted successfully')
+        );
+    }
 }

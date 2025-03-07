@@ -44,7 +44,6 @@ class BookmarkControllerTest extends TestCase
                 'message' => 'Bookmarks retrieved successfully',
             ]);
 
-
         $this->assertCount(3, $response->json('data'));
     }
 
@@ -54,7 +53,6 @@ class BookmarkControllerTest extends TestCase
 
         $response->assertStatus(401);
     }
-
 
     public function test_user_can_only_see_their_own_bookmarks(): void
     {
@@ -70,7 +68,6 @@ class BookmarkControllerTest extends TestCase
             'user_id' => $user2->id,
         ]);
 
-
         $response = $this->actingAs($user1)
             ->getJson('/api/v1/bookmarks');
 
@@ -83,7 +80,7 @@ class BookmarkControllerTest extends TestCase
         $user = User::factory()->create();
 
         $bookmarkData = [
-            'url' => 'https://example.com'
+            'url' => 'https://example.com',
         ];
 
         $response = $this->actingAs($user)
@@ -106,20 +103,22 @@ class BookmarkControllerTest extends TestCase
                 'status' => 'success',
                 'message' => 'Bookmark created successfully',
                 'data' => [
-                    'url' => $bookmarkData['url']
+                    'url' => $bookmarkData['url'],
                 ],
             ]);
 
         $this->assertDatabaseHas('bookmarks', [
             'user_id' => $user->id,
-            'url' => $bookmarkData['url']
+            'url' => $bookmarkData['url'],
         ]);
     }
 
     public function test_unauthenticated_user_cannot_create_bookmark(): void
     {
         $bookmarkData = [
-            'url' => 'https://www.example.com'
+            'url' => 'https://www.example.com',
+            'title' => 'Example Website',
+            'description' => 'This is an example website',
         ];
 
         $response = $this->postJson('/api/v1/bookmarks', $bookmarkData);
@@ -131,7 +130,6 @@ class BookmarkControllerTest extends TestCase
     {
 
         $user = User::factory()->create();
-
 
         $response = $this->actingAs($user)
             ->postJson('/api/v1/bookmarks', [
@@ -153,7 +151,6 @@ class BookmarkControllerTest extends TestCase
             ->assertJsonValidationErrors(['url']);
     }
 
-
     public function test_user_cannot_create_duplicate_bookmark(): void
     {
 
@@ -165,7 +162,7 @@ class BookmarkControllerTest extends TestCase
         ]);
 
         $bookmarkData = [
-            'url' => 'https://www.example.com'
+            'url' => 'https://www.example.com',
         ];
 
         $response = $this->actingAs($user)
@@ -173,5 +170,72 @@ class BookmarkControllerTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['url']);
+    }
+
+    /**
+     * Test that a user can delete their own bookmark
+     */
+    public function test_user_can_delete_bookmark(): void
+    {
+
+        $user = User::factory()->create();
+
+        $bookmark = Bookmark::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->deleteJson("/api/v1/bookmarks/{$bookmark->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+                'message' => 'Bookmark deleted successfully',
+                'data' => null,
+            ]);
+
+        $this->assertSoftDeleted('bookmarks', [
+            'id' => $bookmark->id,
+        ]);
+    }
+
+    public function test_user_cannot_delete_another_users_bookmark(): void
+    {
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+
+        $bookmark = Bookmark::factory()->create([
+            'user_id' => $user2->id,
+        ]);
+
+        $response = $this->actingAs($user1)
+            ->deleteJson("/api/v1/bookmarks/{$bookmark->id}");
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'status' => 'error',
+                'message' => 'Bookmark not found or you do not have permission to delete it',
+            ]);
+
+        $this->assertDatabaseHas('bookmarks', [
+            'id' => $bookmark->id,
+            'deleted_at' => null,
+        ]);
+    }
+
+    public function test_unauthenticated_user_cannot_delete_bookmark(): void
+    {
+        $user = User::factory()->create();
+        $bookmark = Bookmark::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $response = $this->deleteJson("/api/v1/bookmarks/{$bookmark->id}");
+        $response->assertStatus(401);
+
+        $this->assertDatabaseHas('bookmarks', [
+            'id' => $bookmark->id,
+            'deleted_at' => null,
+        ]);
     }
 }

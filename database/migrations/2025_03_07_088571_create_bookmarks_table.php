@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('title')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
 
             $table->unique(['user_id', 'url']);
             $table->index('title');

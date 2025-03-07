@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\V1;
+namespace App\Services;
 
 use App\Contracts\Services\BookmarkServiceInterface;
 use App\Models\Bookmark;

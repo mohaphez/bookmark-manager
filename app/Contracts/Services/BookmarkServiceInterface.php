@@ -17,4 +17,9 @@ interface BookmarkServiceInterface
      * Get all bookmarks for a user
      */
     public function getUserBookmarks(User $user): Collection;
+
+    /**
+     * Delete a bookmark
+     */
+    public function deleteBookmark(User $user, string $bookmarkId): bool;
 }
