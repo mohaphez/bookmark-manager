@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Bookmark\BookmarkController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,5 +21,9 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
+
+        // Bookmark routes
+        Route::get('/bookmarks', [BookmarkController::class, 'index']);
+        Route::post('/bookmarks', [BookmarkController::class, 'store']);
     });
 });
