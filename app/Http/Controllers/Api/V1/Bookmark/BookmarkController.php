@@ -32,12 +32,48 @@ class BookmarkController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
-        $bookmark = bookmarkService()->createBookmark($user, $validated);
+
+        $published = bookmarkPublisher()->publish([
+            'url' => $validated['url'],
+            'user_id' => $user->id
+        ]);
+
+        if (! $published) {
+            $bookmark = bookmarkService()->createBookmark($user, $validated);
+
+            return $this->success(
+                data: new BookmarkResource($bookmark),
+                message: __('Bookmark created successfully'),
+                code: 201
+            );
+        }
 
         return $this->success(
-            data: new BookmarkResource($bookmark),
-            message: __('Bookmark created successfully'),
-            code: 201
+            data: [
+                'url' => $validated['url'],
+                'processing' => true,
+            ],
+            message: __('Bookmark queued for processing'),
+            code: 202
+        );
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $deleted = bookmarkService()->deleteBookmark($user, $id);
+
+        if (! $deleted) {
+            return $this->error(
+                message: __('Bookmark not found or you do not have permission to delete it'),
+                code: 404
+            );
+        }
+
+        return $this->success(
+            data: null,
+            message: __('Bookmark deleted successfully')
         );
     }
 }
