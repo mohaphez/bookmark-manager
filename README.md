@@ -218,7 +218,7 @@ Response (when processed directly):
 #### Delete Bookmark
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/bookmarks/01957235-a3b6-7073-a46e-758689f03005 \
+curl -X DELETE http://localhost/api/v1/bookmarks/01957235-a3b6-7073-a46e-758689f03005 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
