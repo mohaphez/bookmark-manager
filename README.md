@@ -1,66 +1,288 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Bookmark Service Documentation
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Overview
 
-## About Laravel
+The Bookmark Service is a Laravel-based API that allows users to save, retrieve, and manage bookmarks. It features asynchronous metadata fetching using Redis Pub/Sub for distributed processing, ensuring a responsive user experience while metadata (title, description) is fetched in the background.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Key Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- RESTful API for bookmark management
+- Asynchronous metadata fetching via Redis Pub/Sub
+- Soft delete functionality
+- Token-based authentication with Laravel Sanctum
+- Comprehensive error handling and validation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Setup Instructions
 
-## Learning Laravel
+### Prerequisites
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.2+
+- Composer
+- Redis server
+- Sqlite database
+- Docker (for using Laravel Sail)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Installation
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. **Clone the repository**
 
-## Laravel Sponsors
+```bash
+git clone https://github.com/mohaphez/bookmark-manager.git
+cd bookmark-manager
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. **Install dependencies**
 
-### Premium Partners
+```bash
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php84-composer:latest \
+    composer install --ignore-platform-reqs --no-scripts
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+3. **Set up environment**
 
-## Contributing
+```bash
+cp .env.example .env
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+./vendor/bin/sail up -d
+```
 
-## Code of Conduct
+```bash
+./vendor/bin/sail php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+./vendor/bin/sail artisan migrate
+```
 
-## Security Vulnerabilities
+```bash
+./vendor/bin/sail artisan db:seed
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Running the Queue Worker
 
-## License
+To process bookmark metadata in the background:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+./vendor/bin/sail php artisan queue:work --queue=bookmarks
+```
+
+## Running the Redis Subscriber
+
+The bookmark service includes a Redis subscriber that listens for bookmark events from other services. This component is essential for the distributed processing architecture.
+
+
+### Using Docker Compose (Recommended)
+
+The service is already configured in `docker-compose.yml`, so it will start automatically when you run:
+
+```bash
+./vendor/bin/sail up -d
+```
+
+This launches a dedicated container for the bookmark subscriber that:
+- Runs independently from your web server
+- Automatically restarts if it crashes
+
+### Manual Execution (Optional)
+
+If you need to run the subscriber manually for development or debugging:
+
+```bash
+./vendor/bin/sail php artisan bookmark:subscribe
+```
+
+This command will:
+- Connect to Redis
+- Subscribe to the `bookmarks:new` channel
+- Process incoming bookmark messages
+- Dispatch jobs to fetch metadata
+
+
+## API Endpoints
+
+### Authentication
+
+#### Login
+
+```bash
+curl -X POST http://localhost/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password"}'
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "message": "User logged in successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "user@example.com"
+    },
+    "access_token": "1|abcdefghijklmnopqrstuvwxyz",
+    "token_type": "Bearer"
+  }
+}
+```
+
+#### Logout
+
+```bash
+curl -X POST http://localhost/api/v1/logout \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "message": "User logged out successfully",
+  "data": null
+}
+```
+
+### Bookmarks
+
+#### Get All Bookmarks
+
+```bash
+curl -X GET http://localhost/api/v1/bookmarks \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "message": "Bookmarks retrieved successfully",
+  "data": [
+    {
+      "id": "01957235-a3b6-7073-a46e-758689f03005",
+      "url": "https://example.com",
+      "title": "Example Website",
+      "description": "This is an example website",
+      "metadata_status": "completed",
+      "created_at": "2023-03-07T12:00:00.000000Z",
+      "updated_at": "2023-03-07T12:01:00.000000Z"
+    }
+  ]
+}
+```
+
+#### Create Bookmark
+
+```bash
+curl -X POST http://localhost/api/v1/bookmarks \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "title": "Example Website", "description": "This is an example website"}'
+```
+
+Response (when processed asynchronously):
+```json
+{
+  "status": "success",
+  "message": "Bookmark queued for processing",
+  "data": {
+    "url": "https://example.com",
+    "processing": true
+  }
+}
+```
+
+Response (when processed directly):
+```json
+{
+  "status": "success",
+  "message": "Bookmark created successfully",
+  "data": {
+    "id": "01957235-a3b6-7073-a46e-758689f03005",
+    "url": "https://example.com",
+    "title": "Example Website",
+    "description": "This is an example website",
+    "metadata_status": "pending",
+    "created_at": "2023-03-07T12:00:00.000000Z",
+    "updated_at": "2023-03-07T12:00:00.000000Z"
+  }
+}
+```
+
+#### Delete Bookmark
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/bookmarks/01957235-a3b6-7073-a46e-758689f03005 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "message": "Bookmark deleted successfully",
+  "data": null
+}
+```
+
+## Integrating with Redis Pub/Sub
+
+### Publishing Bookmarks from External Services
+
+You can publish bookmarks from other services using Redis Pub/Sub:
+
+```php
+// PHP example
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+
+$bookmark = [
+    'url' => 'https://example.com',
+    'user_id' => 1,
+    'title' => 'Example Website',
+    'description' => 'This is an example website'
+];
+
+$redis->publish('bookmarks:new', json_encode($bookmark));
+```
+
+```bash
+# Redis CLI example
+redis-cli PUBLISH bookmarks:new '{"url":"https://example.com","user_id":1,"title":"Example Website","description":"This is an example website"}'
+```
+
+### Message Format
+
+The message should be a JSON object with the following structure:
+
+```json
+{
+  "url": "https://example.com",
+  "user_id": 1,
+  "title": "Example Website (optional)",
+  "description": "This is an example website (optional)"
+}
+```
+
+Required fields:
+- `url`: The URL of the bookmark
+- `user_id`: The ID of the user who owns the bookmark
+
+Optional fields:
+- `title`: The title of the bookmark
+- `description`: The description of the bookmark
+
+
+## Testing
+
+Run the test suite to ensure everything is working correctly:
+
+```bash
+./vendor/bin/sail test
+```
