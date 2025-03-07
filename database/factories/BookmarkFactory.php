@@ -2,19 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Enums\MetadataStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Bookmark>
- */
+
 class BookmarkFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -22,6 +16,28 @@ class BookmarkFactory extends Factory
             'url' => 'https://www.'.$this->faker->domainName(),
             'title' => $this->faker->sentence(),
             'description' => $this->faker->paragraph(),
+            'metadata_status' => MetadataStatus::PENDING->value,
+            'metadata_error' => null,
         ];
+    }
+
+
+    public function completed(): self
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'metadata_status' => MetadataStatus::COMPLETED->value,
+            ];
+        });
+    }
+
+    public function failed(): self
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'metadata_status' => MetadataStatus::FAILED->value,
+                'metadata_error' => 'Failed to fetch metadata',
+            ];
+        });
     }
 }
