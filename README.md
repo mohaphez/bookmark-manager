@@ -125,7 +125,9 @@ Response:
     "user": {
       "id": 1,
       "name": "John Doe",
-      "email": "user@example.com"
+      "email": "user@example.com",
+      "created_at": "2023-03-07T12:00:00.000000Z",
+      "updated_at": "2023-03-07T12:01:00.000000Z"
     },
     "access_token": "1|abcdefghijklmnopqrstuvwxyz",
     "token_type": "Bearer"
@@ -169,7 +171,6 @@ Response:
       "url": "https://example.com",
       "title": "Example Website",
       "description": "This is an example website",
-      "metadata_status": "completed",
       "created_at": "2023-03-07T12:00:00.000000Z",
       "updated_at": "2023-03-07T12:01:00.000000Z"
     }
@@ -208,7 +209,6 @@ Response (when processed directly):
     "url": "https://example.com",
     "title": "Example Website",
     "description": "This is an example website",
-    "metadata_status": "pending",
     "created_at": "2023-03-07T12:00:00.000000Z",
     "updated_at": "2023-03-07T12:00:00.000000Z"
   }
